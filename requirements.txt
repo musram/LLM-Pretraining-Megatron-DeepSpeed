@@ -1,0 +1,5 @@
+six
+regex
+numpy
+wandb
+tensorboard

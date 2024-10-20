@@ -1,0 +1,76 @@
+version: "3"
+services:
+  llm-md:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: llm-md:latest
+    container_name: llm-md
+    tty: true
+    restart: always
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    shm_size: 60G
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+      - label=disable  # Combine security_opt entries
+    devices:
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+      - /dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidia1:/dev/nvidia1
+      - /dev/nvidia2:/dev/nvidia2
+      - /dev/nvidia3:/dev/nvidia3
+      - /dev/nvidia4:/dev/nvidia4
+      - /dev/nvidia5:/dev/nvidia5
+      - /dev/nvidia6:/dev/nvidia6
+      - /dev/nvidia7:/dev/nvidia7
+      - /dev/infiniband/rdma_cm:/dev/infiniband/rdma_cm
+      - /dev/infiniband/uverbs0:/dev/infiniband/uverbs0
+      - /dev/infiniband/uverbs1:/dev/infiniband/uverbs1
+      - /dev/infiniband/uverbs2:/dev/infiniband/uverbs2
+      - /dev/infiniband/uverbs3:/dev/infiniband/uverbs3
+      - /dev/infiniband/uverbs4:/dev/infiniband/uverbs4
+      - /dev/infiniband/uverbs5:/dev/infiniband/uverbs5
+      - /dev/infiniband/uverbs6:/dev/infiniband/uverbs6
+      - /dev/infiniband/uverbs7:/dev/infiniband/uverbs7
+      - /dev/infiniband/issm0:/dev/infiniband/issm0
+      - /dev/infiniband/issm1:/dev/infiniband/issm1
+      - /dev/infiniband/issm2:/dev/infiniband/issm2
+      - /dev/infiniband/issm3:/dev/infiniband/issm3
+      - /dev/infiniband/issm4:/dev/infiniband/issm4
+      - /dev/infiniband/issm5:/dev/infiniband/issm5
+      - /dev/infiniband/issm6:/dev/infiniband/issm6
+      - /dev/infiniband/issm7:/dev/infiniband/issm7
+    volumes:
+      - /usr/lib/x86_64-linux-gnu/libibverbs.so:/usr/lib/x86_64-linux-gnu/libibverbs.so:ro
+      - /usr/lib/x86_64-linux-gnu/libmlx5.so:/usr/lib/x86_64-linux-gnu/libmlx5.so:ro
+      - /lib/x86_64-linux-gnu/libnvidia-ml.so:/lib/x86_64-linux-gnu/libnvidia-ml.so:ro
+      - /lib/x86_64-linux-gnu/libnvidia-ml.so.1:/lib/x86_64-linux-gnu/libnvidia-ml.so.1:ro
+      - /lib/x86_64-linux-gnu/libcuda.so:/lib/x86_64-linux-gnu/libcuda.so:ro
+      - /lib/x86_64-linux-gnu/libcuda.so.1:/lib/x86_64-linux-gnu/libcuda.so.1:ro
+      - ./dataset/:/home/user/dataset/
+      - ./ds_config.json:/home/user/ds_config.json
+      - ./hostfile:/home/user/hostfile
+      - ./write-env.sh:/home/user/write-env.sh
+      - ./requirements.txt:/home/user/requirements.txt
+      - ./examples/:/home/user/examples/
+      - ./examples_deepspeed/pretrain_qvac_distirbuted.sh:/home/user/Megatron-DeepSpeed/examples_deepspeed/pretrain_qvac_distirbuted.sh
+      - ./examples_deepspeed/pretrain_qvac_mla_distributed.sh:/home/user/Megatron-DeepSpeed/examples_deepspeed/pretrain_qvac_mla_distributed.sh
+      - ./examples_deepspeed/pretrain_qvac_mla_gqa_distributed.sh:/home/user/Megatron-DeepSpeed/examples_deepspeed/pretrain_qvac_mla_gqa_distributed.sh
+      - ./test.sh:/home/user/test.sh
+    network_mode: host
+    environment:
+      - WANDB_API_KEY=${WANDB_API_KEY}
+      - HF_TOKEN=${HF_TOKEN}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+      - NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_6,mlx5_7
+      - NCCL_IB_GID_INDEX=3
+      - NCCL_SOCKET_IFNAME=ib0
+      - NCCL_DEBUG=INFO
+      - NCCL_IB_ENABLE=1

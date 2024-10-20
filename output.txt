@@ -1,0 +1,32 @@
+STEP 1/19: FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn9-devel
+STEP 2/19: ENV "WANDB_API_KEY"="" "HF_TOKEN"="" "NVIDIA_VISIBLE_DEVICES"="all" "NVIDIA_DRIVER_CAPABILITIES"="all" "LD_LIBRARY_PATH"="/usr/lib/x86_64-linux-gnu::/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64" "NCCL_IB_HCA"="mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_6,mlx5_7" "NCCL_IB_GID_INDEX"="3" "NCCL_SOCKET_IFNAME"="ib0" "NCCL_DEBUG"="INFO" "NCCL_IB_ENABLE"="1"
+--> Using cache 24f8a543bef877ae332ca0f42f4de786840a77af9224cd410887080ffe70d90c
+--> 24f8a543bef8
+STEP 3/19: ENV HOME_DIR=/root
+--> Using cache c95b8f3462fc40b0d427bbfd73a5d1f177cf0887c91ebefaa2f4c2c3609fe586
+--> c95b8f3462fc
+STEP 4/19: ENV BASE_SRC_PATH=${HOME_DIR}/Megatron-DeepSpeed
+--> Using cache 3d4554ff11eff58ac57417e6fead3cfcb53d3c3bddeda0b31d5bb478c14e9562
+--> 3d4554ff11ef
+STEP 5/19: ENV BASE_DATA_PATH=${BASE_SRC_PATH}/dataset
+--> Using cache e3a600aae752a868d80080a2056c17adc4d1ad231b7908c0e5223068507471fa
+--> e3a600aae752
+STEP 6/19: RUN apt-get update --yes &&     apt-get upgrade --yes &&     apt-get install --yes --no-install-recommends     build-essential     zlib1g-dev     libncurses5-dev     libgdbm-dev     libnss3-dev     libssl-dev     libsqlite3-dev     libreadline-dev     libffi-dev     liblzma-dev     libbz2-dev     nano     curl     wget     net-tools     iputils-ping     pdsh     git     bash     openssh-server     sudo     xz-utils     libaio-dev     rustc     cargo &&     echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/user &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+--> Using cache e5cb585d9a803952143954c2b163d902e37972ebd0960cffb8369f54f56841ce
+--> e5cb585d9a80
+STEP 7/19: RUN apt-get update &&     apt-get install -y openmpi-bin libopenmpi-dev libibverbs-dev &&     apt-get install -y --no-install-recommends nvidia-utils-555 &&     rm -rf /var/lib/apt/lists/*
+--> Using cache 4b2f442d7f35789bb70579e5af9330de4c6f90cc7409990caf13a1b5443a820e
+--> 4b2f442d7f35
+STEP 8/19: RUN conda install -y -v pytorch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 pytorch-cuda=12.4 -c pytorch -c nvidia 
+--> Using cache 4f8108fed6c1f7f62655b4ef54ea00074ae6aeeb158372c15ad4f028feb9003e
+--> 4f8108fed6c1
+STEP 9/19: RUN python -m pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir     deepspeed transformers pybind11 nltk ipython matplotlib
+--> Using cache 143596c289e4576a677f5521174fe95064c975bc2f73b8ad552c5381d451b3e9
+--> 143596c289e4
+STEP 10/19: RUN git clone https://github.com/NVIDIA/apex &&     cd apex &&     pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./ &&     cd .. &&     rm -rf apex
+Using pip 24.2 from /opt/conda/lib/python3.11/site-packages/pip (python 3.11)
+Processing /workspace/apex
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
