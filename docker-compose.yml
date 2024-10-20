@@ -62,6 +62,7 @@ services:
       - ./examples_deepspeed/pretrain_qvac_mla_distributed.sh:/home/user/Megatron-DeepSpeed/examples_deepspeed/pretrain_qvac_mla_distributed.sh
       - ./examples_deepspeed/pretrain_qvac_mla_gqa_distributed.sh:/home/user/Megatron-DeepSpeed/examples_deepspeed/pretrain_qvac_mla_gqa_distributed.sh
       - ./test.sh:/home/user/test.sh
+      - ./install-toolkit-container.sh:/home/user/install-toolkit-container.sh
     network_mode: host
     environment:
       - WANDB_API_KEY=${WANDB_API_KEY}

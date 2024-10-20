@@ -1,10 +1,21 @@
-ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:24.09-py3
-FROM ${BASE_IMAGE}
-# 
+# Use a PyTorch base image with CUDA support
+ARG PYTORCH_IMAGE=nvcr.io/nvidia/pytorch:24.09-py3
+FROM ${PYTORCH_IMAGE} as dev-base
+
+# Use bash shell with pipefail option
+#SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Set environment variables
-ENV HOME_DIR=/home/user
-ENV BASE_SRC_PATH=${HOME_DIR}/Megatron-DeepSpeed
-ENV BASE_DATA_PATH=${BASE_SRC_PATH}/dataset
+ENV DEBIAN_FRONTEND=noninteractive \
+    SHELL=/bin/bash \
+    WORKSPACE=/home/user
+
+# Create a user 'user' and prepare the workspace
+RUN useradd -m user && \
+    mkdir -p $WORKSPACE/data $WORKSPACE/.ssh && \
+    mkdir -p $WORKSPACE/run/secrets/user_ssh_key && \
+    chmod 700 $WORKSPACE/.ssh && \
+    chown -R user:user $WORKSPACE
 
 # Install system dependencies including sudo
 RUN apt-get update --yes && \
@@ -30,68 +41,43 @@ RUN apt-get update --yes && \
     git \
     bash \
     openssh-server \
-    sudo \
-    xz-utils \
-    libaio-dev \
-    rustc \
-    cargo && \
+    sudo && \
     echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/user && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install NVIDIA utilities inside the container
-# RUN apt-get update && \
-#     apt-get install -y openmpi-bin libopenmpi-dev libibverbs-dev && \
-#     apt-get install -y --no-install-recommends nvidia-utils-555 && \
-#     rm -rf /var/lib/apt/lists/*
+# **Install NVIDIA utilities inside the container**
 
-# Install PyTorch using conda (conda is pre-installed in the PyTorch base image)
-# RUN conda install -y -v pytorch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 pytorch-cuda=12.4 -c pytorch -c nvidia 
+# Copy the requirements file and install Python dependencies
+COPY requirements.txt $WORKSPACE/
+RUN pip install -r $WORKSPACE/requirements.txt
 
-# Upgrade pip and install Python packages
-RUN python -m pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    deepspeed transformers pybind11 nltk ipython matplotlib 
-# RUN pip install --no-cache-dir torch-scatter torch-sparse torch-cluster 
-# # Clone and install NVIDIA Apex
-# RUN git clone https://github.com/NVIDIA/apex && \
-#     cd apex && \
-#     pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./ && \
-#     cd .. && \
-#     rm -rf apex
+# Set the working directory
+WORKDIR $WORKSPACE
 
 # Clone Megatron-DeepSpeed
-RUN git clone https://github.com/microsoft/Megatron-DeepSpeed.git ${BASE_SRC_PATH}
+RUN git clone https://github.com/microsoft/Megatron-DeepSpeed.git 
 
-# # Download and preprocess dataset
-# WORKDIR ${BASE_DATA_PATH}
-# RUN wget https://huggingface.co/bigscience/misc-test-data/resolve/main/stas/oscar-1GB.jsonl.xz && \
-#     xz -d oscar-1GB.jsonl.xz && \
-#     bash download_vocab.sh
+# Clone the transformers repository
+RUN git clone https://github.com/huggingface/transformers.git
 
-# # Preprocess data for oscar dataset
-# RUN python3 ${BASE_SRC_PATH}/tools/preprocess_data.py \
-#     --input ${BASE_DATA_PATH}/oscar-1GB.jsonl \
-#     --output-prefix ${BASE_DATA_PATH}/my-gpt2 \
-#     --vocab-file ${BASE_DATA_PATH}/gpt2-vocab.json \
-#     --dataset-impl mmap \
-#     --tokenizer-type GPT2BPETokenizer \
-#     --merge-file ${BASE_DATA_PATH}/gpt2-merges.txt \
-#     --append-eod \
-#     --workers 8
+# # Change directory into the cloned repository
+WORKDIR $WORKSPACE/transformers
 
-# Install FlashAttention (optional)
-WORKDIR ${BASE_SRC_PATH}
-RUN git clone --recursive https://github.com/ROCmSoftwarePlatform/flash-attention.git && \
-    cd flash-attention && \
-    py_version=$(python -V | grep -oP '(?<=[.])\w+(?=[.])')
-RUN cd ${BASE_SRC_PATH}/flash-attention && python setup.py install
+# # Install the package in editable mode
+RUN pip install -e .
 
-# Set working directory
-WORKDIR ${HOME_DIR}
+# Set the working directory
+WORKDIR $WORKSPACE
 
-COPY test.sh /usr/local/bin/test.sh
-RUN chmod +x /usr/local/bin/test.sh
+# Copy necessary scripts to the workspace
+# COPY start.sh entrypoint.sh write-env.sh $WORKSPACE/
+#RUN chmod +x $WORKSPACE/start.sh $WORKSPACE/entrypoint.sh $WORKSPACE/write-env.sh
 
-# Command to run when the container starts
-CMD ["/usr/local/bin/test.sh"]
+COPY test.sh $WORKSPACE/
+RUN chmod +x $WORKSPACE/test.sh
+
+
+# Set the entrypoint script to run when the container starts (uncomment if needed)
+# ENTRYPOINT ["/home/user/entrypoint.sh"]
+# CMD ["/home/user/test.sh"]

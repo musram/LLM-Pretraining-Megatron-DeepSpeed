@@ -12,7 +12,7 @@
     or if docker-compose.yml file is present then compose and build the container with the following command:
 
     ```
-    podman-compose up -d --build megatron-deepspeed
+    podman-compose up -d --build llm-md
     ```
     or 
     ```
@@ -30,11 +30,7 @@
   - Execute a shell in the running container:
 
     ```
-    podman exec -it -e WANDB_API_KEY=f831d81ce78350019acca3bcd41969beca447b2a -e HF_TOKEN=sss sft-pipeline bash
-    ```
-    or 
-    ```
-    docker exec -it sft-pipeline bash -c 'export WANDB_API_KEY=f831d81ce78350019acca3bcd41969beca447b2a && export HF_TOKEN=sss && bash'
+    podman exec -it -e WANDB_API_KEY=f831d81ce78350019acca3bcd41969beca447b2a -e HF_TOKEN=sss megatron-deepspeed bash
     ```
   - Inside the container, run the script to start the training:
     ```
